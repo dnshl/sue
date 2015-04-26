@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Usage: sue dotfiles <arg> | sue df <arg>
+# Summary: Manage dotfiles
+# Help: Initialize, link, unlink, update and erase your dotfiles.
+# Relies on git and stow.
+#
+# init - Clone git repository into ~/.dotfiles and link.
+#
+#     Asks for Repository
+#     sue dotfiles init [<repository>]
+#
+#     Pass Repository
+#     sue dotfiles init git@github.com:dnshl/dotfiles.git
+#
+# link - Link all Directories in ~/.dotfiles to your home directory.
+#
+#     sue dotfiles link
+#
+# unlink - Remove all Symlinks from the home directory that match directories
+#          in the repository.
+#
+#     sue dotfiles unlink
+#
+# update - Pull updates from the origin repository and relink.
+#
+#     sue dotfiles update
+#
+# erase - Remove all matching links and delete the repository
+#
+#     sue dotfiles erase
+#
+
+set -e
+
+# Improvements
+# nicht Verzeichnisse wechseln
+
+IGNORE_LIST="LICENSE|README.md"
+
+DOTFILES_PATH="$HOME/.dotfiles"
+
+function run_stow {
+    OPTION=$1
+
+    if [ -d $DOTFILES_PATH ]; then
+        cd $DOTFILES_PATH # change into the right path for stow # wenn nicht existiert?
+        DIRECTORIES=$(ls -d */) # wegen hier
+    fi
+
+    stow \
+        $OPTION \
+        --verbose \
+        --target ~ \
+        $DIRECTORIES \
+        --ignore $IGNORE_LIST
+}
+
+function link_dotfiles {
+    echo "Linking dotfiles ..."
+    run_stow "--stow"
+}
+
+if [ "$1" = "init" ]; then
+    if [ ! -z "$2" ]; then
+        DOTFILES_ORIGIN=$2
+    else
+        echo -n "Please input dotfiles repository origin: "
+        read DOTFILES_ORIGIN
+    fi
+
+    if [ ! -d $DOTFILES_PATH ]; then
+        echo "Cloning dotfiles ..."
+        git clone $DOTFILES_ORIGIN $DOTFILES_PATH
+        cd $DOTFILES_PATH
+        git submodule update --init --recursive
+    fi
+
+    link_dotfiles
+
+elif [ "$1" = "link" ] ; then
+    link_dotfiles
+
+elif [ "$1" = "unlink" ] ; then
+    echo "unlinking dotfiles ..."
+    run_stow "--delete"
+
+elif [ "$1" = "update" ]; then
+    echo "Pulling updates from dotfiles origin"
+    cd $DOTFILES_PATH
+    git pull origin master
+    git submodule update --init --recursive
+
+    echo "Relinking dotfiles ..."
+    run_stow "--restow"
+
+elif [ "$1" = "erase" ]; then
+    echo "Unlinking dotfiles ..."
+    run_stow "--delete"
+
+    echo "Deleting dotfiles directory $DOTFILES_PATH ..."
+    rm -rf $DOTFILES_PATH
+
+else
+    sue help dotfiles
+fi
+
