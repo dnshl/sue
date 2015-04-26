@@ -35,7 +35,7 @@ set -e
 # Improvements
 # nicht Verzeichnisse wechseln
 
-IGNORE_LIST="LICENSE|README.md"
+IGNORE_LIST="LICENSE|README.md|.gitmodules"
 
 DOTFILES_PATH="$HOME/.dotfiles"
 
