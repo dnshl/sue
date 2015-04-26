@@ -5,6 +5,8 @@
 
 set -e
 
+SUE_PATH=$(which sue | sed 's/\libexec\/sue//g')
+cd $SUE_PATH
 VERSION=$(git describe --always --tags)
 
 echo $VERSION
