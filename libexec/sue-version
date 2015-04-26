@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# Usage: sue version
+# Summary: Show Sue's Version
+# Help: Shows Sue's version number.
+
+set -e
+
+VERSION=$(git describe --always --tags)
+
+echo $VERSION
